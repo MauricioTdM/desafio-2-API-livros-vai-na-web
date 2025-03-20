@@ -1,11 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import sqlite3
 
 app = Flask(__name__)
 
 @app.route('/')
 def ola():
-    return "<h1>Olá Mundo</>"
+    return render_template('home/home.html')
 
 def init_db():
     with sqlite3.connect('database.db') as conn:
