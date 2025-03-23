@@ -62,5 +62,47 @@ def listar_livros():
     return jsonify(livros_formatados)
 
 
+@app.route('/livros/<int:id_livro>', methods=['DELETE'])
+def deletar_livro(id_livro):
+    with sqlite3.connect('database.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM livros WHERE id = ?", (id_livro,))
+        conn.commit()
+    
+    if cursor.rowcount == 0:
+        return jsonify({"erro": "Livro não encontrado"}), 400
+    
+    return jsonify({"mensagem": "Livro excluído com sucesso"}), 200
+
+@app.route('/livros/<int:id_livro>', methods=['PUT'])
+def atualizar_livro(id_livro):
+    dados = request.get_json()
+
+    titulo = dados.get('titulo')
+    categoria = dados.get('categoria')
+    autor = dados.get('autor')
+    imagem_url = dados.get('imagem_url')
+
+    if not all([titulo, categoria, autor, imagem_url]):
+        return jsonify({"erro": "Todos os campos são obrigatórios"}), 400
+    
+    with sqlite3.connect('database.db') as conn:
+        cursor = conn.cursor()
+
+        livro = cursor.execute("SELECT id FROM livros WHERE id = ?", (id_livro,)).fetchone()
+        if not livro:
+            return jsonify({"erro": "Livro não encontrado"}), 404
+        
+        cursor.execute("""UPDATE livros 
+                       SET titulo = ?, 
+                       categoria = ?, 
+                       autor = ?, 
+                       imagem_url = ?
+                       WHERE id = ?""", (titulo, categoria, autor, imagem_url, id_livro))
+        
+        conn.commit()
+
+        return jsonify({"mensagem": "Livro atualizado com sucesso!"}), 200
+
 if __name__ == "__main__":
     app.run(debug=True)
